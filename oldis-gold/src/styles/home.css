@@ -1,0 +1,111 @@
+/* ===== CONTAINER ===== */
+.home-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+  font-family: system-ui, sans-serif;
+}
+
+/* ===== TITLE ===== */
+.home-title {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+/* ===== GRID ===== */
+.home-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+/* ===== EMPTY STATE ===== */
+.home-empty {
+  font-size: 16px;
+  color: #666;
+  padding: 20px 0;
+  text-align: center;
+}
+
+/* ===== LOADING ===== */
+.home-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 60px;
+  color: #555;
+  font-size: 16px;
+}
+
+/* Loader Circle */
+.loader {
+  width: 35px;
+  height: 35px;
+  border: 4px solid #ddd;
+  border-top-color: #111;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===== FILTER BAR ===== */
+.home-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: #fff;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #eee;
+  margin-bottom: 18px;
+}
+
+/* Text Inputs */
+.hc-input {
+  padding: 8px 10px;
+  font-size: 14px;
+  flex: 1;
+  min-width: 120px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+/* Dropdowns */
+.hc-select {
+  padding: 8px 10px;
+  font-size: 14px;
+  min-width: 120px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+}
+
+/* Clear Button */
+.hc-clear {
+  padding: 8px 12px;
+  background: #333;
+  color: #fff;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+}
+
+.hc-clear:hover {
+  background: #000;
+}
+
+/* ===== RESULTS META ===== */
+.home-meta {
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #444;
+}

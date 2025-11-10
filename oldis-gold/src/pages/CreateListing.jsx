@@ -1,20 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  addDoc,
-  collection,
-  serverTimestamp,
-} from "firebase/firestore";
-import {
-  ref,
-  uploadBytes,
-  getDownloadURL,
-} from "firebase/storage";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage, auth } from "../lib/firebase";
 import "../styles/createListing.css";
 
 const CATEGORIES = ["Mobiles", "Cars", "Bikes", "Home", "Electronics", "Others"];
 const CONDITIONS = ["New", "Used"];
+
+// Keep only digits (handy for WhatsApp field)
+const digitsOnly = (v) => String(v || "").replace(/\D/g, "");
 
 export default function CreateListing() {
   const nav = useNavigate();
@@ -26,10 +21,22 @@ export default function CreateListing() {
   const [condition, setCondition] = useState(CONDITIONS[1]);
   const [location, setLocation] = useState("");
 
+  // Seller info
+  const [sellerName, setSellerName] = useState("");
+  const [sellerWhatsapp, setSellerWhatsapp] = useState("");
+
+  // Images
   const [files, setFiles] = useState([]);       // File objects
   const [previews, setPreviews] = useState([]); // local blob urls
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  // Prefill name from auth (if available)
+  useEffect(() => {
+    const u = auth.currentUser;
+    if (u?.displayName && !sellerName) setSellerName(u.displayName);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFiles = (e) => {
     const picked = Array.from(e.target.files || []).slice(0, 5);
@@ -42,6 +49,11 @@ export default function CreateListing() {
     if (!price || Number(price) <= 0) return "Price must be greater than 0";
     if (!location.trim()) return "City/Location is required";
     if (files.length === 0) return "Please add at least one image";
+
+    const phone = digitsOnly(sellerWhatsapp);
+    if (!phone) return "WhatsApp number is required";
+    if (phone.length < 10 || phone.length > 13) return "Enter a valid WhatsApp number";
+
     return "";
   };
 
@@ -57,10 +69,10 @@ export default function CreateListing() {
     try {
       setSubmitting(true);
 
-      // current user (optional if you haven't built auth yet)
+      // current user (optional)
       const user = auth.currentUser;
       const sellerId = user ? user.uid : "guest";
-      const sellerName = user?.displayName || "Guest";
+      const finalSellerName = sellerName?.trim() || user?.displayName || "Guest";
 
       // 1) upload images
       const urls = await Promise.all(
@@ -72,8 +84,8 @@ export default function CreateListing() {
         })
       );
 
-      // 2) save document
-      const doc = {
+      // 2) save document with seller info
+      const docData = {
         title: title.trim(),
         description: desc.trim(),
         price: Number(price),
@@ -81,15 +93,16 @@ export default function CreateListing() {
         condition,
         location: location.trim(),
         images: urls,
-        sellerId,
-        sellerName,
+        uid: sellerId,               // for ownership checks
+        sellerName: finalSellerName,
+        sellerWhatsapp: digitsOnly(sellerWhatsapp),
         createdAt: serverTimestamp(),
       };
 
-      await addDoc(collection(db, "listings"), doc);
+      const docRef = await addDoc(collection(db, "listings"), docData);
 
-      // 3) navigate home
-      nav("/");
+      // 3) go to detail page
+      nav(`/listing/${docRef.id}`);
     } catch (err) {
       console.error(err);
       setError(err?.message || "Failed to create listing.");
@@ -182,6 +195,30 @@ export default function CreateListing() {
           </div>
         </div>
 
+        {/* Seller info */}
+        <div className="cl-grid">
+          <div className="cl-row">
+            <label>Seller Name</label>
+            <input
+              className="cl-input"
+              type="text"
+              value={sellerName}
+              onChange={(e) => setSellerName(e.target.value)}
+              placeholder="Your name"
+            />
+          </div>
+          <div className="cl-row">
+            <label>WhatsApp Number (without +)</label>
+            <input
+              className="cl-input"
+              type="tel"
+              value={sellerWhatsapp}
+              onChange={(e) => setSellerWhatsapp(e.target.value)}
+              placeholder="e.g. 9876543210"
+            />
+          </div>
+        </div>
+
         <div className="cl-row">
           <label>Photos (max 5)</label>
           <input
@@ -194,12 +231,7 @@ export default function CreateListing() {
           {previews.length > 0 && (
             <div className="cl-previews">
               {previews.map((src, i) => (
-                <img
-                  key={i}
-                  src={src}
-                  alt={`preview-${i}`}
-                  className="cl-thumb"
-                />
+                <img key={i} src={src} alt={`preview-${i}`} className="cl-thumb" />
               ))}
             </div>
           )}

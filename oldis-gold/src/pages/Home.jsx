@@ -1,6 +1,6 @@
 // src/pages/Home.jsx
 import { useEffect, useMemo, useState } from "react";
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { collection, onSnapshot, orderBy, query } from "firebase/firestore"; // ⬅️ onSnapshot added
 import { db } from "../lib/firebase";
 import ListingCard from "../components/ListingCard.jsx";
 import "../styles/home.css";
@@ -20,20 +20,22 @@ export default function Home() {
   const [city, setCity] = useState("");
   const [sortBy, setSortBy] = useState("newest"); // newest | oldest | plh | phl
 
+  // 🔄 Realtime subscription
   useEffect(() => {
-    const fetchListings = async () => {
-      try {
-        const q = query(collection(db, "listings"), orderBy("createdAt", "desc"));
-        const snap = await getDocs(q);
+    const q = query(collection(db, "listings"), orderBy("createdAt", "desc"));
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
         const data = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
         setListings(data);
-      } catch (e) {
-        console.error(e);
-      } finally {
+        setLoading(false);
+      },
+      (err) => {
+        console.error(err);
         setLoading(false);
       }
-    };
-    fetchListings();
+    );
+    return unsub; // cleanup
   }, []);
 
   // 1) Filter
@@ -64,18 +66,14 @@ export default function Home() {
     });
   }, [listings, search, category, condition, minPrice, maxPrice, city]);
 
-  // 2) Sort (uses your sortBy state)
+  // 2) Sort
   const sorted = useMemo(() => {
     const arr = [...filtered];
 
     if (sortBy === "newest") {
-      arr.sort(
-        (a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
-      );
+      arr.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
     } else if (sortBy === "oldest") {
-      arr.sort(
-        (a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0)
-      );
+      arr.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
     } else if (sortBy === "plh") {
       arr.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
     } else if (sortBy === "phl") {
@@ -118,21 +116,13 @@ export default function Home() {
           onChange={(e) => setSearch(e.target.value)}
         />
 
-        <select
-          className="hc-select"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-        >
+        <select className="hc-select" value={category} onChange={(e) => setCategory(e.target.value)}>
           {CATEGORIES.map((c) => (
             <option key={c} value={c}>{c}</option>
           ))}
         </select>
 
-        <select
-          className="hc-select"
-          value={condition}
-          onChange={(e) => setCondition(e.target.value)}
-        >
+        <select className="hc-select" value={condition} onChange={(e) => setCondition(e.target.value)}>
           <option>Any</option>
           <option>New</option>
           <option>Used</option>
@@ -163,13 +153,8 @@ export default function Home() {
           onChange={(e) => setCity(e.target.value)}
         />
 
-        {/* NEW: Sorter */}
-        <select
-          className="hc-select"
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-          title="Sort by"
-        >
+        {/* Sorter */}
+        <select className="hc-select" value={sortBy} onChange={(e) => setSortBy(e.target.value)} title="Sort by">
           <option value="newest">Newest</option>
           <option value="oldest">Oldest</option>
           <option value="plh">Price: Low → High</option>
@@ -187,9 +172,7 @@ export default function Home() {
       </div>
 
       {/* Empty state */}
-      {sorted.length === 0 && (
-        <p className="home-empty">No listings match your filters.</p>
-      )}
+      {sorted.length === 0 && <p className="home-empty">No listings match your filters.</p>}
 
       {/* Grid */}
       <div className="home-grid">

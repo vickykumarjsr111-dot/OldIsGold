@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db, storage, auth } from "../lib/firebase";
+import { db, auth } from "../lib/firebase";
 import "../styles/createListing.css";
 
 const CATEGORIES = ["Mobiles", "Cars", "Bikes", "Home", "Electronics", "Others"];
@@ -10,6 +9,14 @@ const CONDITIONS = ["New", "Used"];
 
 // Keep only digits (handy for WhatsApp field)
 const digitsOnly = (v) => String(v || "").replace(/\D/g, "");
+
+// Split comma/newline separated URLs and sanitize
+const parseUrls = (str) =>
+  String(str || "")
+    .split(/\n|,/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, 10); // max 10
 
 export default function CreateListing() {
   const nav = useNavigate();
@@ -25,9 +32,8 @@ export default function CreateListing() {
   const [sellerName, setSellerName] = useState("");
   const [sellerWhatsapp, setSellerWhatsapp] = useState("");
 
-  // Images
-  const [files, setFiles] = useState([]);       // File objects
-  const [previews, setPreviews] = useState([]); // local blob urls
+  // NEW: image URLs instead of file uploads
+  const [imageUrls, setImageUrls] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -38,17 +44,13 @@ export default function CreateListing() {
     if (u?.displayName && !sellerName) setSellerName(u.displayName);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleFiles = (e) => {
-    const picked = Array.from(e.target.files || []).slice(0, 5);
-    setFiles(picked);
-    setPreviews(picked.map((f) => URL.createObjectURL(f)));
-  };
-
   const validate = () => {
     if (!title.trim()) return "Title is required";
     if (!price || Number(price) <= 0) return "Price must be greater than 0";
     if (!location.trim()) return "City/Location is required";
-    if (files.length === 0) return "Please add at least one image";
+
+    const urls = parseUrls(imageUrls);
+    if (urls.length === 0) return "Please add at least one image URL";
 
     const phone = digitsOnly(sellerWhatsapp);
     if (!phone) return "WhatsApp number is required";
@@ -69,22 +71,13 @@ export default function CreateListing() {
     try {
       setSubmitting(true);
 
-      // current user (optional)
       const user = auth.currentUser;
       const sellerId = user ? user.uid : "guest";
       const finalSellerName = sellerName?.trim() || user?.displayName || "Guest";
 
-      // 1) upload images
-      const urls = await Promise.all(
-        files.map(async (file, idx) => {
-          const fileId = `${Date.now()}_${idx}_${file.name}`;
-          const storageRef = ref(storage, `listings/${sellerId}/${fileId}`);
-          await uploadBytes(storageRef, file);
-          return await getDownloadURL(storageRef);
-        })
-      );
+      // No uploads — just parsed URLs
+      const urls = parseUrls(imageUrls);
 
-      // 2) save document with seller info
       const docData = {
         title: title.trim(),
         description: desc.trim(),
@@ -92,16 +85,14 @@ export default function CreateListing() {
         category,
         condition,
         location: location.trim(),
-        images: urls,
-        uid: sellerId,               // for ownership checks
+        images: urls,                // ← saved as plain URLs
+        uid: sellerId,
         sellerName: finalSellerName,
         sellerWhatsapp: digitsOnly(sellerWhatsapp),
         createdAt: serverTimestamp(),
       };
 
       const docRef = await addDoc(collection(db, "listings"), docData);
-
-      // 3) go to detail page
       nav(`/listing/${docRef.id}`);
     } catch (err) {
       console.error(err);
@@ -161,9 +152,7 @@ export default function CreateListing() {
               onChange={(e) => setCategory(e.target.value)}
             >
               {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
+                <option key={c} value={c}>{c}</option>
               ))}
             </select>
           </div>
@@ -176,9 +165,7 @@ export default function CreateListing() {
               onChange={(e) => setCondition(e.target.value)}
             >
               {CONDITIONS.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
+                <option key={c} value={c}>{c}</option>
               ))}
             </select>
           </div>
@@ -219,22 +206,19 @@ export default function CreateListing() {
           </div>
         </div>
 
+        {/* NEW: URLs instead of file uploads */}
         <div className="cl-row">
-          <label>Photos (max 5)</label>
-          <input
-            className="cl-file"
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={handleFiles}
+          <label>Image URLs (comma or new line; max 10)</label>
+          <textarea
+            className="cl-textarea"
+            rows={3}
+            value={imageUrls}
+            onChange={(e) => setImageUrls(e.target.value)}
+            placeholder={`https://.../photo1.jpg\nhttps://.../photo2.jpg`}
           />
-          {previews.length > 0 && (
-            <div className="cl-previews">
-              {previews.map((src, i) => (
-                <img key={i} src={src} alt={`preview-${i}`} className="cl-thumb" />
-              ))}
-            </div>
-          )}
+          <small style={{ color: "#666" }}>
+            Tip: paste direct image links (.jpg/.png).
+          </small>
         </div>
 
         <div className="cl-actions">

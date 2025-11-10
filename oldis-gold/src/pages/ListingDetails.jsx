@@ -3,9 +3,10 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 
 import { db } from "../lib/firebase";
-import useAuth from "../hooks/useAuth";
+import useAuth from "../hooks/useauth";              // ✅ fix path (capital A)
 import { deleteListing } from "../services/listings";
 import { timeAgo } from "../utils/time";
+import "../styles/listingdetails.css";               // ✅ new styles
 
 const FALLBACK = "https://picsum.photos/800?blur=2";
 const THUMB_FALLBACK = "https://picsum.photos/200?blur=2";
@@ -83,67 +84,36 @@ export default function ListingDetails() {
   const waLink = toWhatsAppLink(item.sellerWhatsapp, waMessage);
 
   return (
-    <main className="page" style={{ maxWidth: 1000 }}>
+    <main className="page" style={{ maxWidth: 1100 }}>
       <Link to="/" className="btn" style={{ marginBottom: 12 }}>
         ← Back
       </Link>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1.2fr 1fr",
-          gap: 24,
-        }}
-      >
+      <div className="ld-grid">
         {/* Gallery */}
         <section>
-          <img
-            key={sel}
-            src={images[sel] || FALLBACK}
-            alt={item.title}
-            style={{
-              width: "100%",
-              height: 440,
-              objectFit: "cover",
-              borderRadius: 12,
-            }}
-            onError={(e) => (e.currentTarget.src = FALLBACK)}
-          />
+          <div className="ld-img-wrap">
+            <img
+              key={sel}
+              src={images[sel] || FALLBACK}
+              alt={item.title}
+              onError={(e) => (e.currentTarget.src = FALLBACK)}
+            />
+          </div>
 
           {images.length > 1 && (
-            <div
-              style={{
-                display: "flex",
-                gap: 8,
-                marginTop: 10,
-                flexWrap: "wrap",
-              }}
-            >
+            <div className="ld-thumbs">
               {images.map((u, i) => (
                 <button
                   key={i}
+                  type="button"
+                  className={`ld-thumb ${i === sel ? "active" : ""}`}
                   onClick={() => setSel(i)}
-                  style={{
-                    border: i === sel ? "2px solid #111" : "1px solid #ddd",
-                    borderRadius: 10,
-                    padding: 0,
-                    background: "transparent",
-                    cursor: "pointer",
-                  }}
                   aria-label={`Preview image ${i + 1}`}
                 >
                   <img
                     src={u}
-                    alt={`img-${i}`}
-                    width={96}
-                    height={96}
-                    style={{
-                      width: 96,
-                      height: 96,
-                      objectFit: "cover",
-                      borderRadius: 8,
-                      display: "block",
-                    }}
+                    alt={`thumb-${i}`}
                     onError={(e) => (e.currentTarget.src = THUMB_FALLBACK)}
                   />
                 </button>
@@ -154,47 +124,27 @@ export default function ListingDetails() {
 
         {/* Details */}
         <section>
-          <h1 style={{ margin: "0 0 6px" }}>{item.title || "Untitled"}</h1>
+          <h1 className="ld-title">{item.title || "Untitled"}</h1>
 
-          <div style={{ fontSize: 26, fontWeight: 800, marginBottom: 8 }}>
-            {priceStr}
-          </div>
+          <div className="ld-price">{priceStr}</div>
 
-          <div
-            style={{
-              color: "#555",
-              marginBottom: 8,
-              display: "flex",
-              gap: 8,
-              flexWrap: "wrap",
-            }}
-          >
+          <div className="ld-meta">
             {item.category && <span>{item.category}</span>}
             {item.condition && <span>• {item.condition}</span>}
             {item.location && <span>• {item.location}</span>}
             {postedStr && <span>• {postedStr}</span>}
           </div>
 
-          {item.description && (
-            <p style={{ lineHeight: 1.6, marginTop: 12 }}>{item.description}</p>
-          )}
+          {item.description && <p className="ld-desc">{item.description}</p>}
 
           {/* Seller block + WhatsApp */}
-          <div
-            style={{
-              marginTop: 16,
-              padding: 12,
-              border: "1px solid #eee",
-              borderRadius: 10,
-            }}
-          >
-            <div style={{ fontWeight: 600, marginBottom: 6 }}>Seller</div>
-            <div style={{ display: "grid", gap: 2 }}>
-              <div>Name: {item.sellerName || "—"}</div>
-              <div>WhatsApp: {item.sellerWhatsapp || "—"}</div>
+          <div className="ld-seller">
+            <div className="ld-seller-title">Seller</div>
+            <div className="ld-seller-grid">
+              <div><b>Name:</b> {item.sellerName || "—"}</div>
+              <div><b>WhatsApp:</b> {item.sellerWhatsapp || "—"}</div>
             </div>
 
-            {/* Show WhatsApp button ONLY if number exists */}
             {waLink && (
               <a
                 className="btn primary"
@@ -210,18 +160,11 @@ export default function ListingDetails() {
 
           {/* Owner actions */}
           <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-            <Link className="btn" to="/">
-              Back
-            </Link>
-
+            <Link className="btn" to="/">Back</Link>
             {canEdit && (
               <>
-                <Link className="btn" to={`/edit/${item.id}`}>
-                  Edit
-                </Link>
-                <button className="btn danger" onClick={onDelete}>
-                  Delete
-                </button>
+                <Link className="btn" to={`/edit/${item.id}`}>Edit</Link>
+                <button className="btn danger" onClick={onDelete}>Delete</button>
               </>
             )}
           </div>

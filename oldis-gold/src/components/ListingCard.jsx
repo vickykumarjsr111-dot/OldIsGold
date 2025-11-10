@@ -8,18 +8,25 @@ export default function ListingCard({ item }) {
       : "";
 
   return (
-    <Link to={`/listing/${item.id}`} className="lc-card">
-      {img ? (
-        <img src={img} alt={item.title} className="lc-img" />
-      ) : (
-        <div className="lc-img placeholder">No Image</div>
-      )}
+    // inside ListingCard.jsx return(...)
+<Link to={`/listing/${item.id}`} className="lc-card">
+  <img
+    src={img}
+    alt={item.title}
+    onError={(e) => {
+      e.target.onerror = null;
+      e.target.src = "";
+    }}
+  />
+  <div className="lc-body">
+    <h3 className="lc-title">{item.title}</h3>
+    <div className="lc-price">₹{Number(item.price) || "—"}</div>
+    <div className="lc-meta">
+      <span>{item.location || "—"}</span>
+      {item.condition && <span>• {item.condition}</span>}
+    </div>
+  </div>
+</Link>
 
-      <div className="lc-info">
-        <h3 className="lc-title">{item.title}</h3>
-        <div className="lc-price">₹{item.price}</div>
-        <div className="lc-meta">{item.location ?? "Unknown"}</div>
-      </div>
-    </Link>
   );
 }

@@ -8,22 +8,50 @@ import ListingDetails from "./pages/ListingDetails.jsx";
 import MyListings from "./pages/MyListings.jsx";
 import Profile from "./pages/Profile.jsx";
 import NotFound from "./pages/NotFound.jsx";
+import RequireAuth from "./components/RequireAuth.jsx";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Navbar />
+
       <Routes>
+        {/* Public */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/create" element={<CreateListing />} />
         <Route path="/listing/:id" element={<ListingDetails />} />
-        <Route path="/my-listings" element={<MyListings />} />
-        <Route path="/profile" element={<Profile />} />
+
+        {/* Protected */}
+        <Route
+          path="/create"
+          element={
+            <RequireAuth>
+              <CreateListing />
+            </RequireAuth>
+          }
+        />
+
+        <Route
+          path="/my-listings"
+          element={
+            <RequireAuth>
+              <MyListings />
+            </RequireAuth>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <RequireAuth>
+              <Profile />
+            </RequireAuth>
+          }
+        />
+
+        {/* Not found */}
         <Route path="*" element={<NotFound />} />
-        <Route path="/create" element={<CreateListing />} />
-    
       </Routes>
     </BrowserRouter>
   );

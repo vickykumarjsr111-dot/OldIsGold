@@ -3,10 +3,10 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 
 import { db } from "../lib/firebase";
-import useAuth from "../hooks/useauth";              // ✅ fix path (capital A)
+import useAuth from "../hooks/useauth";          // ✅ fixed
 import { deleteListing } from "../services/listings";
 import { timeAgo } from "../utils/time";
-import "../styles/listingdetails.css";               // ✅ new styles
+import "../styles/listingdetails.css";
 
 const FALLBACK = "https://picsum.photos/800?blur=2";
 const THUMB_FALLBACK = "https://picsum.photos/200?blur=2";
@@ -17,13 +17,87 @@ const INR = new Intl.NumberFormat("en-IN", {
   maximumFractionDigits: 0,
 });
 
-// Build a WhatsApp link from a number + optional message
+/* WhatsApp link */
 function toWhatsAppLink(rawNumber, message = "") {
   if (!rawNumber) return null;
   const digits = String(rawNumber).replace(/\D/g, "");
-  const withCC = digits.startsWith("91") ? digits : `91${digits}`; // default India
+  const withCC = digits.startsWith("91") ? digits : `91${digits}`;
   const text = encodeURIComponent(message || "");
   return `https://wa.me/${withCC}${text ? `?text=${text}` : ""}`;
+}
+
+/* --- Lightweight carousel (no libs) --- */
+function ImageCarousel({ images = [], alt = "" }) {
+  const [i, setI] = useState(0);
+  const n = images.length || 1;
+  const list = n ? images : [FALLBACK];
+
+  const go = (d) => setI((p) => (p + d + n) % n);
+  const jump = (idx) => setI(idx);
+
+  // swipe
+  const [startX, setStartX] = useState(null);
+  const onDown = (e) => setStartX(e.clientX ?? e.touches?.[0]?.clientX);
+  const onUp = (e) => {
+    if (startX == null) return;
+    const x = e.clientX ?? e.changedTouches?.[0]?.clientX;
+    const dx = x - startX;
+    if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1);
+    setStartX(null);
+  };
+
+  return (
+    <div className="car-wrap" tabIndex={0} onKeyDown={(e)=>{ if(e.key==="ArrowLeft") go(-1); if(e.key==="ArrowRight") go(1); }}>
+      <div
+        className="car-stage"
+        onMouseDown={onDown}
+        onMouseUp={onUp}
+        onTouchStart={onDown}
+        onTouchEnd={onUp}
+      >
+        <img
+          key={i}
+          src={list[i] || FALLBACK}
+          alt={alt}
+          onError={(e)=> (e.currentTarget.src = FALLBACK)}
+        />
+        {n > 1 && (
+          <>
+            <button className="car-arrow left" onClick={()=>go(-1)} aria-label="Previous">‹</button>
+            <button className="car-arrow right" onClick={()=>go(1)} aria-label="Next">›</button>
+          </>
+        )}
+      </div>
+
+      {n > 1 && (
+        <>
+          <div className="car-dots">
+            {list.map((_, idx) => (
+              <button
+                key={idx}
+                className={`car-dot ${idx === i ? "active" : ""}`}
+                onClick={()=>jump(idx)}
+                aria-label={`Image ${idx+1}`}
+              />
+            ))}
+          </div>
+
+          <div className="car-thumbs">
+            {list.map((u, idx) => (
+              <button
+                key={idx}
+                className={`car-thumb ${idx === i ? "active" : ""}`}
+                onClick={()=>jump(idx)}
+                aria-label={`Thumbnail ${idx+1}`}
+              >
+                <img src={u} alt={`thumb-${idx}`} onError={(e)=> (e.currentTarget.src = THUMB_FALLBACK)} />
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
 }
 
 export default function ListingDetails() {
@@ -33,15 +107,12 @@ export default function ListingDetails() {
 
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [sel, setSel] = useState(0);
 
   useEffect(() => {
     (async () => {
       try {
         const snap = await getDoc(doc(db, "listings", id));
-        const data = snap.exists() ? { id: snap.id, ...snap.data() } : null;
-        setItem(data);
-        setSel(0);
+        setItem(snap.exists() ? { id: snap.id, ...snap.data() } : null);
       } catch (e) {
         console.error(e);
       } finally {
@@ -57,75 +128,26 @@ export default function ListingDetails() {
   );
 
   if (loading) return <div className="page">Loading…</div>;
-  if (!item)
-    return (
-      <div className="page">
-        Listing not found. <Link to="/">Go home</Link>
-      </div>
-    );
+  if (!item) return <div className="page">Listing not found. <Link to="/">Go home</Link></div>;
 
-  const priceStr = Number.isFinite(Number(item.price))
-    ? INR.format(Number(item.price))
-    : "—";
-
+  const priceStr = Number.isFinite(Number(item.price)) ? INR.format(Number(item.price)) : "—";
   const postedStr = item.createdAt ? `Posted ${timeAgo(item.createdAt)}` : "";
-
-  const onDelete = async () => {
-    if (!confirm("Delete this listing?")) return;
-    try {
-      await deleteListing(item);
-      nav("/");
-    } catch (e) {
-      alert(e?.message || "Failed to delete");
-    }
-  };
-
   const waMessage = `Hi, I'm interested in your "${item.title}".`;
   const waLink = toWhatsAppLink(item.sellerWhatsapp, waMessage);
 
   return (
     <main className="page" style={{ maxWidth: 1100 }}>
-      <Link to="/" className="btn" style={{ marginBottom: 12 }}>
-        ← Back
-      </Link>
+      <Link to="/" className="btn" style={{ marginBottom: 12 }}>← Back</Link>
 
       <div className="ld-grid">
-        {/* Gallery */}
+        {/* Gallery as carousel */}
         <section>
-          <div className="ld-img-wrap">
-            <img
-              key={sel}
-              src={images[sel] || FALLBACK}
-              alt={item.title}
-              onError={(e) => (e.currentTarget.src = FALLBACK)}
-            />
-          </div>
-
-          {images.length > 1 && (
-            <div className="ld-thumbs">
-              {images.map((u, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  className={`ld-thumb ${i === sel ? "active" : ""}`}
-                  onClick={() => setSel(i)}
-                  aria-label={`Preview image ${i + 1}`}
-                >
-                  <img
-                    src={u}
-                    alt={`thumb-${i}`}
-                    onError={(e) => (e.currentTarget.src = THUMB_FALLBACK)}
-                  />
-                </button>
-              ))}
-            </div>
-          )}
+          <ImageCarousel images={images} alt={item.title} />
         </section>
 
         {/* Details */}
         <section>
           <h1 className="ld-title">{item.title || "Untitled"}</h1>
-
           <div className="ld-price">{priceStr}</div>
 
           <div className="ld-meta">
@@ -137,7 +159,6 @@ export default function ListingDetails() {
 
           {item.description && <p className="ld-desc">{item.description}</p>}
 
-          {/* Seller block + WhatsApp */}
           <div className="ld-seller">
             <div className="ld-seller-title">Seller</div>
             <div className="ld-seller-grid">
@@ -146,25 +167,21 @@ export default function ListingDetails() {
             </div>
 
             {waLink && (
-              <a
-                className="btn primary"
-                style={{ marginTop: 10, display: "inline-block" }}
-                href={waLink}
-                target="_blank"
-                rel="noreferrer"
-              >
+              <a className="btn primary" style={{ marginTop: 10, display: "inline-block" }} href={waLink} target="_blank" rel="noreferrer">
                 Contact on WhatsApp
               </a>
             )}
           </div>
 
-          {/* Owner actions */}
           <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
             <Link className="btn" to="/">Back</Link>
             {canEdit && (
               <>
                 <Link className="btn" to={`/edit/${item.id}`}>Edit</Link>
-                <button className="btn danger" onClick={onDelete}>Delete</button>
+                <button className="btn danger" onClick={async ()=>{
+                  if (!confirm("Delete this listing?")) return;
+                  try { await deleteListing(item); nav("/"); } catch (e) { alert(e?.message || "Failed to delete"); }
+                }}>Delete</button>
               </>
             )}
           </div>

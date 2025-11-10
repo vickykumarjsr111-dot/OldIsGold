@@ -11,6 +11,13 @@ import NotFound from "./pages/NotFound.jsx";
 import RequireAuth from "./components/RequireAuth.jsx";
 import EditListing from "./pages/EditListing.jsx";
 
+import './styles/home.css';
+import './styles/listingcard.css';
+import './styles/listingdetails.css';
+import './styles/profile.css';
+import './styles/global.css';  
+
+
 export default function App() {
   return (
     <BrowserRouter>

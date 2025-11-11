@@ -3,23 +3,23 @@
   --radius: 14px;
 
   /* light */
-  --bg: #f7f8fa;
-  --card: #ffffff;
-  --ink: #111827;
-  --ink-2: #374151;
+  --bg: #ACB7AE;
+  --card: #E4DECD;
+  --ink: #12343B;
+  --ink-2: #82716E;
   --muted: #6b7280;
-  --line: #e5e7eb;
+  --line: #0d2d6e;
   --placeholder: #f2f2f2;
   --shadow-sm: 0 1px 2px rgba(16,24,40,.06);
 }
 
 /* dark (toggled via <html class="theme-dark">) */
 :root.theme-dark{
-  --bg: #0b0f15;
-  --card: #111827;
-  --ink: #e6eef9;
-  --ink-2: #cbd5e1;
-  --muted: #9fb0c8;
+  --bg: #000;
+  --card: #071531ac;
+  --ink: #a5ace2;
+  --ink-2: #5c7cbd;
+  --muted: #5a85c1;
   --line: #1f2937;
   --placeholder: #0f172a;
   --shadow-sm: 0 1px 2px rgba(0,0,0,.4);

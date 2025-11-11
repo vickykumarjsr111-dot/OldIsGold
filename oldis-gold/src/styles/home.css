@@ -124,7 +124,7 @@ html,body{ background: var(--bg); color: var(--ink); }
 
 /* ---- Listing Card polish (uses common class hooks) ---- */
 .lc-card{
-  background:#fff;
+  background:#E4DECD;
   border: 1px solid var(--line);
   border-radius: 16px;
   box-shadow: var(--shadow-sm);

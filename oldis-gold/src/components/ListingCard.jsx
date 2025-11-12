@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import "../styles/listingCard.css";
+import "../styles/listingcard.css";
 
 export default function ListingCard({ item }) {
   const img =

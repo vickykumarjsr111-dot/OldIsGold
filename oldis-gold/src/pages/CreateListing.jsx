@@ -217,7 +217,7 @@ export default function CreateListing() {
             placeholder={`https://.../photo1.jpg\nhttps://.../photo2.jpg`}
           />
           <small style={{ color: "#666" }}>
-            Tip: paste direct image links (.jpg/.png).
+            Tip: No Storage? Host your avatar on Cloudinary/ImgBB and paste the direct URL here.
           </small>
         </div>
 

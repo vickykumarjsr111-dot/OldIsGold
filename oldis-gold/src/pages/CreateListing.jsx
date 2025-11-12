@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db, auth } from "../lib/firebase";
-import "../styles/createListing.css";
+import "../styles/createlisting.css";
 
 const CATEGORIES = ["Mobiles", "Cars", "Bikes", "Home", "Electronics", "Others"];
 const CONDITIONS = ["New", "Used"];

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import useAuth from "../hooks/useauth";
+import useAuth from "../hooks/useAuth";
 import { listenMyListings } from "../services/listings";
 import ListingCard from "../components/ListingCard";
 

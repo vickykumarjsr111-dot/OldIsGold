@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 
 import { db } from "../lib/firebase";
-import useAuth from "../hooks/useauth";          // ✅ fixed
+import useAuth from "../hooks/useAuth";          // ✅ fixed
 import { deleteListing } from "../services/listings";
 import { timeAgo } from "../utils/time";
 import "../styles/listingdetails.css";

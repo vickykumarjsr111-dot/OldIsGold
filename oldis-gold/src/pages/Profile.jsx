@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import useAuth from "../hooks/useauth";
+import useAuth from "../hooks/useAuth";
 import { auth } from "../lib/firebase";
 import {
   updateProfile,

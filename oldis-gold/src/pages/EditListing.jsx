@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../lib/firebase";
-import useAuth from "../hooks/useauth";
+import useAuth from "../hooks/useAuth";
 import "../styles/editlisting.css";
 
 const CATEGORIES = ["Mobiles", "Cars", "Bikes", "Home", "Electronics", "Others"];

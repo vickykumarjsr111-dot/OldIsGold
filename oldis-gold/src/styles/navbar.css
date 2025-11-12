@@ -56,7 +56,7 @@
 .nav-links a:hover { background: #f3f4f6; color: #111827; transform: translateY(-1px); }
 .nav-links a.active { font-weight: 700; background: #f1f5f9; }
 
-/* hamburger button (mobile) */
+/* ===== HAMBURGER BUTTON ===== */
 .nav-hamburger {
   background: transparent;
   border: 0;
@@ -65,25 +65,34 @@
   cursor: pointer;
 }
 
+/* Default (light mode) */
 .hamburger {
   display: block;
   width: 22px;
   height: 2px;
   background: #111;
   position: relative;
-  transition: transform 220ms ease;
+  transition: transform 220ms ease, background 300ms ease;
 }
-.hamburger::before, .hamburger::after {
+.hamburger::before,
+.hamburger::after {
   content: "";
   position: absolute;
   left: 0;
   right: 0;
   height: 2px;
   background: #111;
-  transition: transform 220ms ease, top 220ms ease, opacity 150ms ease;
+  transition: transform 220ms ease, top 220ms ease, opacity 150ms ease, background 300ms ease;
 }
 .hamburger::before { top: -7px; }
 .hamburger::after { top: 7px; }
+
+/* Dark mode → make hamburger white */
+.dark .hamburger,
+.dark .hamburger::before,
+.dark .hamburger::after {
+  background: #fff !important;
+}
 
 /* open state */
 .hamburger.open { background: transparent; }
@@ -95,10 +104,14 @@
   display: none;
 }
 
-/* Drawer visible when open (mobile only) */
-.mobile-drawer.open { display: block; position: fixed; inset: 0; z-index: 2000; }
+.mobile-drawer.open {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+}
 
-/* BACKDROP (rendered BEFORE panel) — low z-index */
+/* BACKDROP */
 .drawer-backdrop {
   position: absolute;
   inset: 0;
@@ -109,14 +122,13 @@
   pointer-events: none;
 }
 
-/* when open make backdrop visible and clickable */
 .mobile-drawer.open .drawer-backdrop {
   background: rgba(0,0,0,0.36);
   opacity: 1;
   pointer-events: auto;
 }
 
-/* PANEL: sits ABOVE backdrop (higher z-index) */
+/* PANEL */
 .mobile-drawer-inner {
   position: absolute;
   inset: 0 auto 0 0;
@@ -127,13 +139,12 @@
   box-shadow: 0 24px 60px rgba(2,6,23,0.28);
   transform: translateX(-110%);
   transition: transform 320ms cubic-bezier(.22,.9,.2,1);
-  z-index: 20; /* greater than backdrop */
+  z-index: 20;
   display: flex;
   flex-direction: column;
   padding: 14px;
 }
 
-/* Slide in when open */
 .mobile-drawer.open .mobile-drawer-inner {
   transform: translateX(0);
 }
@@ -169,6 +180,7 @@
   color: #111827;
   font-weight: 600;
   background: #f8fafc;
+  transition: background 200ms ease, color 200ms ease;
 }
 .mobile-link.active { background: #eef2ff; color: #1e293b; }
 
@@ -187,7 +199,7 @@
 /* ===== Responsive rules ===== */
 @media (max-width: 900px) {
   .nav-hamburger { display: inline-flex; }
-  .nav-links { display: none; } /* hide desktop links on smaller screens */
+  .nav-links { display: none; }
 }
 
 @media (max-width: 480px) {

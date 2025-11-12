@@ -8,6 +8,7 @@
 }
 
 * { box-sizing: border-box; }
+
 .nav {
   position: sticky;
   top: 0;
@@ -53,8 +54,16 @@
   transition: background 160ms, color 160ms, transform 160ms;
 }
 
-.nav-links a:hover { background: #f3f4f6; color: #111827; transform: translateY(-1px); }
-.nav-links a.active { font-weight: 700; background: #f1f5f9; }
+.nav-links a:hover {
+  background: #f3f4f6;
+  color: #111827;
+  transform: translateY(-1px);
+}
+
+.nav-links a.active {
+  font-weight: 700;
+  background: #f1f5f9;
+}
 
 /* ===== HAMBURGER BUTTON ===== */
 .nav-hamburger {
@@ -65,7 +74,7 @@
   cursor: pointer;
 }
 
-/* Default (light mode) */
+/* Hamburger (Light Mode Default) */
 .hamburger {
   display: block;
   width: 22px;
@@ -74,6 +83,7 @@
   position: relative;
   transition: transform 220ms ease, background 300ms ease;
 }
+
 .hamburger::before,
 .hamburger::after {
   content: "";
@@ -84,14 +94,28 @@
   background: #111;
   transition: transform 220ms ease, top 220ms ease, opacity 150ms ease, background 300ms ease;
 }
+
 .hamburger::before { top: -7px; }
 .hamburger::after { top: 7px; }
 
-/* Dark mode → make hamburger white */
+/* Smooth transition + Dark Mode (White) */
 .dark .hamburger,
 .dark .hamburger::before,
-.dark .hamburger::after {
+.dark .hamburger::after,
+html.dark .hamburger,
+html.dark .hamburger::before,
+html.dark .hamburger::after,
+body.dark .hamburger,
+body.dark .hamburger::before,
+body.dark .hamburger::after,
+[data-theme="dark"] .hamburger,
+[data-theme="dark"] .hamburger::before,
+[data-theme="dark"] .hamburger::after,
+.theme-dark .hamburger,
+.theme-dark .hamburger::before,
+.theme-dark .hamburger::after {
   background: #fff !important;
+  transition: background 0.3s ease;
 }
 
 /* open state */
@@ -157,6 +181,7 @@
   gap: 8px;
   margin-bottom: 12px;
 }
+
 .drawer-close {
   background: transparent;
   border: 0;
@@ -172,6 +197,7 @@
   gap: 8px;
   padding-bottom: 8px;
 }
+
 .mobile-link {
   display: block;
   padding: 12px 10px;
@@ -182,7 +208,11 @@
   background: #f8fafc;
   transition: background 200ms ease, color 200ms ease;
 }
-.mobile-link.active { background: #eef2ff; color: #1e293b; }
+
+.mobile-link.active {
+  background: #eef2ff;
+  color: #1e293b;
+}
 
 .mobile-toggle { margin-top: 6px; }
 

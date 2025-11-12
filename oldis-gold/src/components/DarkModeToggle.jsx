@@ -1,14 +1,14 @@
 // src/components/DarkModeToggle.jsx
 import { useEffect, useState } from "react";
 
-const initial = () => {
+const getInitialTheme = () => {
   const saved = localStorage.getItem("theme");
   if (saved) return saved === "dark";
   return window.matchMedia("(prefers-color-scheme: dark)").matches;
 };
 
 export default function DarkModeToggle() {
-  const [dark, setDark] = useState(initial);
+  const [dark, setDark] = useState(getInitialTheme);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -22,7 +22,11 @@ export default function DarkModeToggle() {
   }, [dark]);
 
   return (
-    <button className="btn" onClick={() => setDark(d => !d)}>
+    <button
+      className="btn"
+      onClick={() => setDark((prev) => !prev)}
+      aria-label="Toggle Dark Mode"
+    >
       {dark ? "🌙 Dark" : "☀️ Light"}
     </button>
   );

@@ -35,7 +35,7 @@ html, body{
   transition: background-color .2s ease, color .2s ease;
 }
 /* layout */
-.container { max-width:1100px; margin:0 auto; padding:24px; }
+.container { width: 100%; max-width:1100px; margin:0 auto; padding:16px; }
 
 /* navbar */
 .nav{

@@ -5,6 +5,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   signInWithRedirect,
+  getRedirectResult,        // <-- ADDED
 } from "firebase/auth";
 import {
   getFirestore,
@@ -45,6 +46,7 @@ export const googleProvider = new GoogleAuthProvider();
  * Small helpers you can import where needed:
  * - signInWithGooglePopup(): use popup sign-in
  * - signInWithGoogleRedirect(): optional redirect-based sign-in
+ * - finishRedirectSignIn(): call on app mount to finish redirect flow
  *
  * I export them so your Login page can just call signInWithGooglePopup()
  */
@@ -54,6 +56,17 @@ export async function signInWithGooglePopup() {
 
 export async function signInWithGoogleRedirect() {
   return signInWithRedirect(auth, googleProvider);
+}
+
+/* ===========================
+   ADDITION: finish redirect helper
+   Call this on app / login page mount to complete redirect sign-in.
+   Returns the redirect result (or null) and throws if Firebase throws.
+   =========================== */
+export async function finishRedirectSignIn() {
+  // getRedirectResult resolves when redirected back to your app after a redirect sign-in
+  // If no redirect result exists it returns null (no user)
+  return getRedirectResult(auth);
 }
 
 // Firestore (with local persistent cache)

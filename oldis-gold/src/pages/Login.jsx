@@ -1,7 +1,7 @@
 // src/pages/Login.jsx
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
-import { auth, signInWithGooglePopup } from "../lib/firebase"; // <- use helper from lib
+import { auth, signInWithGooglePopup, signInWithGoogleRedirect, finishRedirectSignIn } from "../lib/firebase";
 import "../styles/login.css";
 import {
   signInWithEmailAndPassword,
@@ -18,6 +18,27 @@ export default function Login() {
   const [pass, setPass] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+
+  // If the app was redirected from Google sign-in, finish it here
+  useEffect(() => {
+    (async () => {
+      try {
+        setBusy(true);
+        const res = await finishRedirectSignIn();
+        if (res && res.user) {
+          // Successfully signed in via redirect
+          nav(redirectTo, { replace: true });
+        }
+      } catch (e) {
+        // optional: show a friendly message for redirect errors
+        console.error("Redirect sign-in error:", e);
+        // you can setErr(...) if you want to show it to the user
+      } finally {
+        setBusy(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -41,13 +62,27 @@ export default function Login() {
     setErr("");
     setBusy(true);
     try {
-      await signInWithGooglePopup(); // <-- uses helper from src/lib/firebase.js
+      // Try popup sign-in first (best UX on desktop)
+      await signInWithGooglePopup();
       nav(redirectTo, { replace: true });
     } catch (e) {
-      // friendly messages for popup-block or auth errors
-      const msg = (e?.code || "").toString();
-      if (msg.includes("popup-blocked") || msg.includes("popup_closed_by_user")) {
-        setErr("Popup blocked or closed. Please allow popups and try again.");
+      const code = (e?.code || "").toString().toLowerCase();
+      const msg = (e?.message || "").toLowerCase();
+
+      // Fallback conditions (popup blocked, closed, iframe issues, etc.)
+      if (
+        code.includes("popup-blocked") ||
+        code.includes("cancelled-popup-request") ||
+        code.includes("popup_closed_by_user") ||
+        /popup|blocked|iframe|cancelled|access_denied/.test(msg)
+      ) {
+        // start redirect flow (works in mobile browsers)
+        try {
+          await signInWithGoogleRedirect();
+          // note: redirect will navigate away; the completion is handled in useEffect above
+        } catch (err) {
+          setErr(cleanFirebaseError(err?.message || "Google redirect failed"));
+        }
       } else {
         setErr(cleanFirebaseError(e?.message || "Google sign-in failed"));
       }
@@ -136,6 +171,9 @@ function cleanFirebaseError(msg) {
   }
   if (m.includes("network") || m.includes("timeout")) {
     return "Network error. Please check your connection.";
+  }
+  if (m.includes("popup-blocked") || m.includes("popup_closed_by_user")) {
+    return "Popup blocked or closed. Try again or use a different device.";
   }
   return msg.replace("Firebase:", "").trim();
 }

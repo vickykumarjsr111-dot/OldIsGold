@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { auth } from "../lib/firebase";
-import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
+import {
+  onAuthStateChanged,
+  signOut,
+  GoogleAuthProvider,
+  signInWithPopup,
+} from "firebase/auth";
 
 const provider = new GoogleAuthProvider();
 
@@ -8,6 +13,7 @@ export default function useAuth() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Track auth state (runs once)
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u || null);
@@ -16,8 +22,15 @@ export default function useAuth() {
     return () => unsub();
   }, []);
 
-  const signIn = async () => { await signInWithPopup(auth, provider); };
-  const signOutNow = async () => { await signOut(auth); };
+  // Google login
+  const googleLogin = async () => {
+    return await signInWithPopup(auth, provider);
+  };
 
-  return { user, loading, signIn, signOut: signOutNow };
+  // Logout
+  const logout = async () => {
+    return await signOut(auth);
+  };
+
+  return { user, loading, googleLogin, logout };
 }

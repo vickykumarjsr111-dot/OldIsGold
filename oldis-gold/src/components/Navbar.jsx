@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { NavLink, Link, useLocation } from "react-router-dom";
+import { NavLink, Link, useLocation, useNavigate } from "react-router-dom";
 import "../styles/navbar.css";
 import DarkModeToggle from "./DarkModeToggle";
+import useAuth from "../hooks/useAuth";
 
 export default function Navbar() {
+  const { user, loading, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const panelRef = useRef(null);
+  const nav = useNavigate();
 
   // Close drawer when route changes
   useEffect(() => {
@@ -33,8 +36,17 @@ export default function Navbar() {
     { to: "/create", label: "Post Ad" },
     { to: "/my-listings", label: "My Listings" },
     { to: "/profile", label: "Profile" },
-    { to: "/login", label: "Login" },
   ];
+
+  const onLogout = async () => {
+    try {
+      await logout();
+      nav("/");
+    } catch (e) {
+      console.error("Logout failed", e);
+      alert("Failed to logout. Try again.");
+    }
+  };
 
   return (
     <header className="nav">
@@ -67,6 +79,27 @@ export default function Navbar() {
             {l.label}
           </NavLink>
         ))}
+
+        {/* Auth section */}
+        {!loading && user ? (
+          <>
+            <Link to="/profile" className="nav-user">
+              <img
+                src={user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email || "U")}&background=ddd`}
+                alt={user.displayName || user.email || "User"}
+                className="nav-avatar"
+              />
+              <span className="nav-username">{user.displayName || user.email}</span>
+            </Link>
+            <button className="btn" onClick={onLogout}>
+              Logout
+            </button>
+          </>
+        ) : (
+          <NavLink to="/login" className={({ isActive }) => (isActive ? "active" : "")}>
+            Login
+          </NavLink>
+        )}
 
         <DarkModeToggle />
       </nav>
@@ -106,13 +139,28 @@ export default function Navbar() {
                 key={l.to}
                 to={l.to}
                 end={l.end}
-                className={({ isActive }) =>
-                  "mobile-link" + (isActive ? " active" : "")
-                }
+                className={({ isActive }) => "mobile-link" + (isActive ? " active" : "")}
               >
                 {l.label}
               </NavLink>
             ))}
+
+            {/* Mobile auth area */}
+            {!loading && user ? (
+              <div className="mobile-user">
+                <img
+                  src={user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email || "U")}&background=ddd`}
+                  alt={user.displayName || user.email || "User"}
+                  className="mobile-avatar"
+                />
+                <div style={{ marginLeft: 10 }}>
+                  <div style={{ fontWeight: 700 }}>{user.displayName || user.email}</div>
+                  <button className="btn" onClick={onLogout}>Logout</button>
+                </div>
+              </div>
+            ) : (
+              <NavLink to="/login" className="mobile-link">Login</NavLink>
+            )}
 
             <div className="mobile-toggle">
               <DarkModeToggle />

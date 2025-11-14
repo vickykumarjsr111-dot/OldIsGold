@@ -1,15 +1,12 @@
+// src/pages/Login.jsx
 import { useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
-import { auth } from "../lib/firebase";
+import { auth, signInWithGooglePopup } from "../lib/firebase"; // <- use helper from lib
 import "../styles/login.css";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signInWithPopup,
-  GoogleAuthProvider,
 } from "firebase/auth";
-
-const provider = new GoogleAuthProvider();
 
 export default function Login() {
   const nav = useNavigate();
@@ -44,10 +41,16 @@ export default function Login() {
     setErr("");
     setBusy(true);
     try {
-      await signInWithPopup(auth, provider);
+      await signInWithGooglePopup(); // <-- uses helper from src/lib/firebase.js
       nav(redirectTo, { replace: true });
     } catch (e) {
-      setErr(cleanFirebaseError(e?.message || "Google sign-in failed"));
+      // friendly messages for popup-block or auth errors
+      const msg = (e?.code || "").toString();
+      if (msg.includes("popup-blocked") || msg.includes("popup_closed_by_user")) {
+        setErr("Popup blocked or closed. Please allow popups and try again.");
+      } else {
+        setErr(cleanFirebaseError(e?.message || "Google sign-in failed"));
+      }
     } finally {
       setBusy(false);
     }

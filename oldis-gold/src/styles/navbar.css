@@ -236,3 +236,55 @@ body.dark .hamburger::after,
   .nav { padding: 10px 12px; }
   .nav-brand { font-size: 20px; }
 }
+/* ===== Navbar avatar & user styles ===== */
+.nav-user {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  padding: 6px 8px;
+  border-radius: 8px;
+  margin-left: 6px;
+}
+
+.nav-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 1px 2px rgba(16,24,40,0.04);
+}
+
+.nav-username {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Mobile user block inside drawer */
+.mobile-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.03);
+  margin: 8px 0;
+}
+
+.mobile-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+/* Make sure avatar/text look good in dark mode when theme-dark is active */
+.theme-dark .nav-username,
+.theme-dark .nav-user {
+  color: #f8fafc;
+}
+
+.theme-dark .nav-user { background: transparent; }

@@ -119,3 +119,47 @@
 @media (max-width: 640px) {
   .profile-top { align-items: flex-start; }
 }
+/* small toast */
+.toast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  background: #111827;
+  color: white;
+  padding: 10px 14px;
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(2,6,23,0.2);
+  z-index: 9999;
+  font-weight: 600;
+  transform-origin: right bottom;
+  animation: pop 240ms cubic-bezier(.2,.9,.2,1);
+}
+@keyframes pop { from { transform: scale(.92); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+
+/* preview improvements */
+.preview {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin: 10px 0 0;
+}
+.preview img { width: 84px; height: 84px; object-fit: cover; border-radius: 12px; border: 1px solid rgba(0,0,0,0.06); }
+.preview-info { display:flex; flex-direction: column; }
+
+/* alerts */
+.alert { padding: 10px 12px; border-radius: 8px; margin: 10px 0; font-weight: 600; }
+.alert.ok { background: #ECFDF5; color: #065f46; border: 1px solid #bbf7d0; }
+.alert.error { background: #FEF2F2; color: #991b1b; border: 1px solid #fecaca; }
+
+/* quick-row */
+.quick-row { display:flex; gap: 8px; margin-top: 8px; }
+
+/* profile-actions layout */
+.profile-actions { display:flex; gap: 8px; flex-wrap:wrap; margin-top: 12px; }
+
+/* small status dot */
+.status-dot { width: 12px; height:12px; border-radius: 99px; display:inline-block; margin-left: 8px; box-shadow: 0 2px 6px rgba(2,6,23,0.06); }
+.status-dot.ok { background: #16a34a; }
+.status-dot.warn { background: #f59e0b; }
+
+/* small copy "Copied" state handled in button text; no extra CSS required */

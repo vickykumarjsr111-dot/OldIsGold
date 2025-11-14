@@ -1,3 +1,4 @@
+// src/pages/Profile.jsx
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
@@ -6,7 +7,6 @@ import {
   updateProfile,
   sendPasswordResetEmail,
   sendEmailVerification,
-  signOut,
 } from "firebase/auth";
 import "../styles/profile.css";
 
@@ -14,13 +14,14 @@ const AVATAR_FALLBACK =
   "https://ui-avatars.com/api/?name=User&background=111111&color=ffffff&size=160&bold=true";
 
 export default function Profile() {
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
   const [displayName, setDisplayName] = useState("");
   const [photoURL, setPhotoURL] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
   const [toast, setToast] = useState("");
+  const [copied, setCopied] = useState("");
 
   useEffect(() => {
     if (!user) return;
@@ -37,19 +38,25 @@ export default function Profile() {
     );
   }
 
+  const showToast = (t) => {
+    setToast(t);
+    setTimeout(() => setToast(""), 2200);
+  };
+
   const save = async (e) => {
     e.preventDefault();
-    setMsg(""); setErr(""); setBusy(true);
+    setMsg("");
+    setErr("");
+    setBusy(true);
     try {
       await updateProfile(auth.currentUser, {
-        displayName: displayName.trim(),
+        displayName: displayName.trim() || null,
         photoURL: photoURL.trim() || null,
       });
-      await auth.currentUser.reload(); // refresh auth object so Navbar etc. update
+      // reload so onAuthStateChanged picks new data
+      await auth.currentUser.reload();
       setMsg("Profile updated.");
-      setToast("Profile saved");
-      // auto clear toast
-      setTimeout(() => setToast(""), 1800);
+      showToast("Profile saved");
     } catch (e) {
       setErr(e?.message || "Failed to update profile.");
     } finally {
@@ -58,45 +65,67 @@ export default function Profile() {
   };
 
   const onResetPassword = async () => {
-    setMsg(""); setErr("");
+    setMsg("");
+    setErr("");
+    setBusy(true);
     try {
       await sendPasswordResetEmail(auth, user.email);
       setMsg("Password reset email sent.");
-      setToast("Reset email sent");
-      setTimeout(() => setToast(""), 1800);
+      showToast("Reset email sent");
     } catch (e) {
       setErr(e?.message || "Failed to send reset email.");
+    } finally {
+      setBusy(false);
     }
   };
 
   const onVerifyEmail = async () => {
-    setMsg(""); setErr("");
+    setMsg("");
+    setErr("");
+    setBusy(true);
     try {
       await sendEmailVerification(auth.currentUser, {
         url: window.location.origin + "/profile",
         handleCodeInApp: true,
       });
       setMsg("Verification email sent.");
-      setToast("Verification email sent");
-      setTimeout(() => setToast(""), 1800);
+      showToast("Verification email sent");
     } catch (e) {
       setErr(e?.message || "Failed to send verification email.");
+    } finally {
+      setBusy(false);
     }
   };
 
-  const onLogout = async () => { await signOut(auth); };
+  const onLogout = async () => {
+    // ask to confirm so user doesn't logout by mistake
+    if (!confirm("Logout now?")) return;
+    try {
+      await logout();
+      // optionally redirect handled elsewhere by route
+    } catch (e) {
+      console.error(e);
+      alert("Logout failed. Try again.");
+    }
+  };
+
+  const copyToClipboard = async (text, label) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(label);
+      setTimeout(() => setCopied(""), 1600);
+      showToast("Copied");
+    } catch {
+      showToast("Copy failed");
+    }
+  };
 
   const avatar = (photoURL || AVATAR_FALLBACK).trim();
 
   return (
     <main className="page profile-wrap">
-      {/* Toast */}
-      {toast && (
-        <div className="toast">
-          <span className="check" aria-hidden>✓</span>
-          {toast}
-        </div>
-      )}
+      {/* Toast (floating) */}
+      {toast && <div className="toast">{toast}</div>}
 
       <div className="profile-card">
         <header className="profile-top">
@@ -107,12 +136,16 @@ export default function Profile() {
               className="profile-avatar"
               onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)}
             />
-            <div className={`status-dot ${user.emailVerified ? "ok" : "warn"}`} />
+            <div
+              className={`status-dot ${user.emailVerified ? "ok" : "warn"}`}
+              title={user.emailVerified ? "Email verified" : "Email not verified"}
+            />
           </div>
 
           <div className="profile-id">
             <div className="profile-name">{user.displayName || "User"}</div>
             <div className="profile-email">{user.email || "—"}</div>
+
             <div className="profile-meta">
               <span className={user.emailVerified ? "ok" : "warn"}>
                 {user.emailVerified ? "Email verified" : "Email not verified"}
@@ -127,6 +160,7 @@ export default function Profile() {
           </div>
         </header>
 
+        {/* Alerts */}
         {err && <div className="alert error">{err}</div>}
         {msg && <div className="alert ok">{msg}</div>}
 
@@ -156,9 +190,27 @@ export default function Profile() {
               alt="preview"
               onError={(e) => (e.currentTarget.src = AVATAR_FALLBACK)}
             />
-            <div>
-              <div className="preview-name">{displayName || "Your name"}</div>
+            <div className="preview-info">
+              <div className="preview-name">{displayName || user.displayName || "Your name"}</div>
               <div className="muted small">{user.email}</div>
+
+              <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => copyToClipboard(user.uid, "UID")}
+                >
+                  {copied === "UID" ? "Copied" : "Copy UID"}
+                </button>
+
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => copyToClipboard(user.email || "", "Email")}
+                >
+                  {copied === "Email" ? "Copied" : "Copy Email"}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -166,15 +218,36 @@ export default function Profile() {
             <button className="btn primary" disabled={busy}>
               {busy ? "Saving…" : "Save"}
             </button>
+
             {!user.emailVerified && (
-              <button type="button" className="btn" onClick={onVerifyEmail}>
+              <button
+                type="button"
+                className="btn"
+                onClick={onVerifyEmail}
+                disabled={busy}
+                aria-disabled={busy}
+              >
                 Send verification email
               </button>
             )}
-            <button type="button" className="btn" onClick={onResetPassword}>
+
+            <button
+              type="button"
+              className="btn"
+              onClick={onResetPassword}
+              disabled={busy}
+              aria-disabled={busy}
+            >
               Reset password
             </button>
-            <button type="button" className="btn danger" onClick={onLogout}>
+
+            <button
+              type="button"
+              className="btn danger"
+              onClick={onLogout}
+              disabled={busy}
+              aria-disabled={busy}
+            >
               Logout
             </button>
           </div>

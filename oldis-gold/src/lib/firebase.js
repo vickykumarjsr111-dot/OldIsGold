@@ -1,10 +1,27 @@
+// src/lib/firebase.js
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithRedirect,
+} from "firebase/auth";
+import {
+  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+} from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-import { initializeFirestore, persistentLocalCache } from "firebase/firestore";
 
-
+/**
+ * Make sure these env vars exist locally (.env) and in Vercel:
+ * VITE_FIREBASE_API_KEY
+ * VITE_FIREBASE_AUTH_DOMAIN
+ * VITE_FIREBASE_PROJECT_ID
+ * VITE_FIREBASE_STORAGE_BUCKET
+ * VITE_FIREBASE_MESSAGING_SENDER_ID
+ * VITE_FIREBASE_APP_ID
+ */
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -16,8 +33,35 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
+// Auth
 export const auth = getAuth(app);
+
+// Google provider (export so other files can use it)
+export const googleProvider = new GoogleAuthProvider();
+// optional: force account selection on popup
+// googleProvider.setCustomParameters({ prompt: "select_account" });
+
+/**
+ * Small helpers you can import where needed:
+ * - signInWithGooglePopup(): use popup sign-in
+ * - signInWithGoogleRedirect(): optional redirect-based sign-in
+ *
+ * I export them so your Login page can just call signInWithGooglePopup()
+ */
+export async function signInWithGooglePopup() {
+  return signInWithPopup(auth, googleProvider);
+}
+
+export async function signInWithGoogleRedirect() {
+  return signInWithRedirect(auth, googleProvider);
+}
+
+// Firestore (with local persistent cache)
 export const db = initializeFirestore(app, {
   localCache: persistentLocalCache(),
 });
+
+// Storage
 export const storage = getStorage(app);
+
+export default app;
